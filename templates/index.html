@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shrimp Yield Prediction</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --card-bg: rgba(255, 255, 255, 0.12);
+            --card-border: rgba(255, 255, 255, 0.35);
+            --accent: #00fff0;
+            --accent-soft: #66f1c2;
+            --accent-strong: #00f0ff;
+            --text-main: #ecf0f3;
+            --text-muted: #b0bec5;
+            --danger: #ff7675;
+            --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text-main);
+        }
+
+        /* Animated background wrapper */
+        .animated-bg {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #00b4d8);
+            background-size: 300% 300%;
+            animation: gradientMove 18s ease infinite;
+        }
+
+        @keyframes gradientMove {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .page-wrapper {
+            width: 100%;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+            background:
+                radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 55%),
+                radial-gradient(circle at bottom right, rgba(0,255,240,0.12), transparent 55%);
+            padding: 28px 32px 32px;
+            border-radius: 28px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(18px);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 24px 55px rgba(0, 0, 0, 0.55);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 26px;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 0.03em;
+        }
+
+        .title-block p {
+            margin: 4px 0 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(0,255,240,0.16), rgba(102,241,194,0.06));
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-soft);
+            box-shadow: 0 0 10px rgba(102,241,194,0.9);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 22px;
+            padding: 20px 22px;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(18px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.5);
+            border-color: rgba(0,255,240,0.35);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .card-header span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 18px;
+            margin-top: 6px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #e3f2fd;
+        }
+
+        .label-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        input {
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(8, 18, 28, 0.65);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            transition:
+                border-color 0.25s ease,
+                box-shadow 0.25s ease,
+                background 0.25s ease,
+                transform 0.08s ease;
+        }
+
+        input::placeholder {
+            color: #78909c;
+            font-size: 0.8rem;
+        }
+
+        input:hover {
+            border-color: rgba(0,255,240,0.35);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(8, 25, 40, 0.9);
+            box-shadow: 0 0 0 1px rgba(0,255,240,0.5);
+            transform: translateY(-1px);
+        }
+
+        small {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .button-row {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        button {
+            padding: 10px 18px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: #041016;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            letter-spacing: 0.03em;
+            box-shadow: 0 10px 25px rgba(0, 255, 240, 0.25);
+            transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            position: relative;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(0, 255, 240, 0.35);
+            filter: brightness(1.05);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 18px rgba(0, 255, 240, 0.22);
+        }
+
+        /* Loading state + shimmer */
+        button.loading {
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+        button.loading::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.55), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%   { background-position: -150% 0; }
+            100% { background-position: 150% 0; }
+        }
+
+        #result {
+            flex: 1;
+            font-size: 0.96rem;
+            font-weight: 600;
+            color: var(--accent);
+            padding: 10px 12px;
+            background: rgba(3, 18, 26, 0.85);
+            border-radius: 12px;
+            border: 1px solid rgba(0,255,240,0.35);
+            transform-origin: left center;
+        }
+
+        .result-muted {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.85rem;
+        }
+
+        /* Result pulse animation */
+        @keyframes pulseResult {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        .result-anim {
+            animation: pulseResult 0.35s ease-out;
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-weight: 600;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(5, 28, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-soft);
+        }
+
+        .alert {
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: var(--danger);
+        }
+
+        .footer-note {
+            margin-top: 18px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                padding: 22px 18px 24px;
+            }
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            form {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .button-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #result {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="animated-bg">
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="header">
+                <div class="title-block">
+                    <h1>Shrimp Yield Prediction</h1>
+                    <p>Estimate expected harvest yield based on current pond conditions.</p>
+                </div>
+                <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>ML Model • Random Forest</span>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- LEFT: FORM CARD -->
+                <section class="card">
+                    <div class="card-header">
+                        <h2>Input Pond Parameters</h2>
+                        <span>Enter current values to get a yield estimate</span>
+                    </div>
+
+                    <form id="predictForm">
+                        <div class="form-group">
+                            <label>Prawn Density per m²</label>
+                            <span class="label-sub">Stocking density of shrimp in the pond</span>
+                            <input type="number" step="0.1" id="prawn_density_per_m2" placeholder="e.g. 15.0" required>
+                            <small>Range: 5–40 prawn/m²</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Feed Quality Index</label>
+                            <span class="label-sub">Overall quality score of feed</span>
+                            <input type="number" step="0.01" id="feed_quality_index" placeholder="e.g. 0.85" required>
+                            <small>Range: 0.4–1.0</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Water Exchange per Month</label>
+                            <span class="label-sub">Number of full or partial exchanges</span>
+                            <input type="number" step="0.1" id="water_exchange_per_month" placeholder="e.g. 6" required>
+                            <small>Range: 1–12 times/month</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>DO (mg/L)</label>
+                            <span class="label-sub">Dissolved oxygen level in the pond</span>
+                            <input type="number" step="0.01" id="DO_mg_L" placeholder="e.g. 5.8" required>
+                            <small>Range: 3.5–8.0 mg/L</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Temperature (°C)</label>
+                            <span class="label-sub">Average pond water temperature</span>
+                            <input type="number" step="0.1" id="temperature_C" placeholder="e.g. 29.5" required>
+                            <small>Range: 24–34°C</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>pH</label>
+                            <span class="label-sub">Acidity/alkalinity of pond water</span>
+                            <input type="number" step="0.01" id="pH" placeholder="e.g. 7.6" required>
+                            <small>Range: 6.8–8.5</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ammonia (mg/L)</label>
+                            <span class="label-sub">Unionized or total ammonia level</span>
+                            <input type="number" step="0.01" id="ammonia_mg_L" placeholder="e.g. 0.15" required>
+                            <small>Range: 0.01–1.2 mg/L</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nitrite (mg/L)</label>
+                            <span class="label-sub">Nitrite concentration in water</span>
+                            <input type="number" step="0.01" id="nitrite_mg_L" placeholder="e.g. 0.08" required>
+                            <small>Range: 0.01–0.6 mg/L</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>H₂S (mg/L)</label>
+                            <span class="label-sub">Hydrogen sulfide level</span>
+                            <input type="number" step="0.01" id="H2S_mg_L" placeholder="e.g. 0.03" required>
+                            <small>Range: 0–0.15 mg/L</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Turbidity (cm)</label>
+                            <span class="label-sub">Secchi disk visibility depth</span>
+                            <input type="number" step="0.1" id="turbidity_cm" placeholder="e.g. 40" required>
+                            <small>Range: 20–80 cm</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Salinity (ppt)</label>
+                            <span class="label-sub">Salt concentration in water</span>
+                            <input type="number" step="0.1" id="salinity_ppt" placeholder="e.g. 18" required>
+                            <small>Range: 5–35 ppt</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Pond Size (ha)</label>
+                            <span class="label-sub">Surface area of the pond</span>
+                            <input type="number" step="0.1" id="pond_size_ha" placeholder="e.g. 0.8" required>
+                            <small>Range: 0.1–2.0 ha</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Recycling Efficiency (%)</label>
+                            <span class="label-sub">Efficiency of water treatment and reuse</span>
+                            <input type="number" step="0.1" id="recycling_efficiency_pct" placeholder="e.g. 65" required>
+                            <small>Range: 40–90%</small>
+                        </div>
+
+                        <div class="button-row">
+                            <button type="submit">Predict Yield</button>
+                            <div id="result" class="result-muted">
+                                Enter parameters and click Predict to see yield.
+                            </div>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- RIGHT: INFO / METRICS CARD -->
+                <aside class="side-panel">
+                    <section class="card">
+                        <div class="card-header">
+                            <h2>Model Info</h2>
+                            <span>Current configuration</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Algorithm</span>
+                            <span class="metric-value">Random Forest Regressor</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Train R²</span>
+                            <span class="metric-value">≈ 0.96</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Test R²</span>
+                            <span class="metric-value">≈ 0.84</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Test MAE</span>
+                            <span class="metric-value">≈ 7.8</span>
+                        </div>
+
+                        <div style="margin-top: 12px;">
+                            <span class="pill">
+                                <span class="pill-dot"></span>
+                                Major drivers: density, DO, ammonia
+                            </span>
+                        </div>
+                        <p class="alert">
+                            Note: This tool is for decision support only, not a substitute for on‑farm trials.
+                        </p>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h2>Tips for Better Predictions</h2>
+                            <span>Keep values within recommended ranges</span>
+                        </div>
+                        <ul style="margin: 4px 0 0; padding-left: 18px; font-size: 0.8rem; color: var(--text-muted);">
+                            <li>Maintain DO towards the upper range to support high stocking densities.</li>
+                            <li>Keep ammonia and nitrite as low as possible for healthier shrimp.</li>
+                            <li>Use consistent measurement methods for all inputs for reliable results.</li>
+                        </ul>
+                    </section>
+                </aside>
+            </div>
+
+            <div class="footer-note">
+                Shrimp Yield Simulator • Educational Prototype
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById("predictForm");
+    const resultBox = document.getElementById("result");
+
+    function animateResult() {
+        resultBox.classList.remove("result-anim");
+        void resultBox.offsetWidth; // reset animation
+        resultBox.classList.add("result-anim");
+    }
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const data = {
+            prawn_density_per_m2: parseFloat(document.getElementById("prawn_density_per_m2").value),
+            feed_quality_index: parseFloat(document.getElementById("feed_quality_index").value),
+            water_exchange_per_month: parseFloat(document.getElementById("water_exchange_per_month").value),
+            DO_mg_L: parseFloat(document.getElementById("DO_mg_L").value),
+            temperature_C: parseFloat(document.getElementById("temperature_C").value),
+            pH: parseFloat(document.getElementById("pH").value),
+            ammonia_mg_L: parseFloat(document.getElementById("ammonia_mg_L").value),
+            nitrite_mg_L: parseFloat(document.getElementById("nitrite_mg_L").value),
+            H2S_mg_L: parseFloat(document.getElementById("H2S_mg_L").value),
+            turbidity_cm: parseFloat(document.getElementById("turbidity_cm").value),
+            salinity_ppt: parseFloat(document.getElementById("salinity_ppt").value),
+            pond_size_ha: parseFloat(document.getElementById("pond_size_ha").value),
+            recycling_efficiency_pct: parseFloat(document.getElementById("recycling_efficiency_pct").value)
+        };
+
+        const button = form.querySelector("button[type='submit']");
+
+        try {
+            resultBox.textContent = "Predicting...";
+            resultBox.classList.remove("result-muted");
+            button.classList.add("loading");
+
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) throw new Error("Network response was not OK");
+
+            const result = await response.json();
+            resultBox.textContent = "Predicted Yield: " + result.prediction.toFixed(2) + "%";
+            animateResult();
+        } catch (err) {
+            resultBox.textContent = "Error: " + err.message;
+        } finally {
+            button.classList.remove("loading");
+        }
+    });
+</script>
+</body>
+</html>
