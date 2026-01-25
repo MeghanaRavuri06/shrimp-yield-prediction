@@ -10,17 +10,20 @@ app = FastAPI(
 )
 
 # CORS so React (localhost:3000) can call FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "https://frontend-shrimp.vercel.app",  # your frontend deployed URL
 ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # allow only your frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 class Features(BaseModel):
     prawn_density_per_m2: float
