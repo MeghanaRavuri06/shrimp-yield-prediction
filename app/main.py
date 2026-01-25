@@ -1,31 +1,53 @@
-from fastapi import FastAPI, Request
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-from app.schemas import ShrimpInput
-from app.model import predict_yield
+# app/main.py
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from .model import predict_yield
 
-app = FastAPI(title="Shrimp Yield Prediction API")
+app = FastAPI(
+    title="Shrimp Yield Prediction API",
+    description="Predicts shrimp yield percentage from pond parameters.",
+)
 
-# -----------------------------
-# Serve templates and static files
-# -----------------------------
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# CORS so React (localhost:3000) can call FastAPI
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# -----------------------------
-# Root endpoint to serve HTML
-# -----------------------------
+class Features(BaseModel):
+    prawn_density_per_m2: float
+    feed_quality_index: float
+    water_exchange_per_month: float
+    DO_mg_L: float
+    temperature_C: float
+    pH: float
+    ammonia_mg_L: float
+    nitrite_mg_L: float
+    H2S_mg_L: float
+    turbidity_cm: float
+    salinity_ppt: float
+    pond_size_ha: float
+    recycling_efficiency_pct: float
+
 @app.get("/")
-def home(request: Request):
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request}  # No prediction initially
-    )
+def root():
+    return {"message": "Shrimp Yield Prediction API is running"}
 
-# -----------------------------
-# Predict endpoint (JSON)
-# -----------------------------
 @app.post("/predict")
-def predict(shrimp: ShrimpInput):
-    prediction = predict_yield(shrimp.dict())
-    return {"prediction": float(prediction)}  # Return JSON for JS fetch
+def predict(features: Features):
+    try:
+        input_dict = features.dict()
+        pred = predict_yield(input_dict)
+        return {"prediction": pred}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Prediction failed")
