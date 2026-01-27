@@ -18,11 +18,12 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # allow only your frontend
-    allow_credentials=True,
+    allow_origins=["https://frontend-shrimp.vercel.app"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 class Features(BaseModel):
