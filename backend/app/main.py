@@ -10,6 +10,7 @@ app = FastAPI(
 )
 
 
+
 origins = [
     "https://frontend-shrimp.vercel.app",
     "http://localhost:3000",
